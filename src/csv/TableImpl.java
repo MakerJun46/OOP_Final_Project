@@ -180,7 +180,7 @@ public class TableImpl implements Table {
         }
         for(int i = 0; i < spaces.length; i++)
         {
-            for(int j = 0; j < getRowCount(); j++)
+            for(int j = isFirstRowHeader ? 1 : 0; j < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); j++)
             {
                 if(spaces[i] < ColumnList.get(i).getValue(j).length())
                     spaces[i] = ColumnList.get(i).getValue(j).length();
@@ -395,22 +395,119 @@ public class TableImpl implements Table {
 
     @Override
     public Table selectRows(int beginIndex, int endIndex) {
-        return null;
+        ArrayList<String> Datas = new ArrayList<>();
+
+        if(isFirstRowHeader)
+        {
+            beginIndex++;
+            endIndex++;
+        }
+
+        for(int i = beginIndex; i < endIndex; i++)
+        {
+            String temp = "";
+            for(int j = 0; j < ColumnList.size(); j++)
+            {
+                temp += ColumnList.get(j).getValue(i);
+                if(j != ColumnList.size() - 1)
+                    temp += ",";
+            }
+            Datas.add(temp);
+        }
+
+        Table table = new TableImpl(isFirstRowHeader ? AllHeaders : null, Datas);
+
+        return table;
     }
 
     @Override
     public Table selectRowsAt(int... indices) {
-        return null;
+        ArrayList<String> Datas = new ArrayList<>();
+
+        if(isFirstRowHeader)
+            for(int i = 0; i < indices.length; i++)
+                indices[i]++;
+
+
+        for(int i : indices)
+        {
+            String temp = "";
+            for(int j = 0; j < ColumnList.size(); j++)
+            {
+                temp += ColumnList.get(j).getValue(i);
+                if(j != ColumnList.size() - 1)
+                    temp += ",";
+            }
+            Datas.add(temp);
+        }
+
+        Table table = new TableImpl(isFirstRowHeader ? AllHeaders : null, Datas);
+
+        return table;
     }
 
     @Override
     public Table selectColumns(int beginIndex, int endIndex) {
-        return null;
+        ArrayList<String> Datas = new ArrayList<>();
+        String Headers = isFirstRowHeader ? "" : null;
+
+        if(isFirstRowHeader)
+        {
+            for(int i = beginIndex; i < endIndex; i++)
+            {
+                Headers += ColumnList.get(i).getHeader();
+                if(i != endIndex - 1)
+                    Headers += ",";
+            }
+        }
+
+        for(int i = isFirstRowHeader ? 1 : 0; i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++)
+        {
+            String temp = "";
+            for(int j = beginIndex; j < endIndex; j++)
+            {
+                temp += ColumnList.get(j).getValue(i);
+                if(j != endIndex - 1)
+                    temp += ",";
+            }
+            Datas.add(temp);
+        }
+
+        Table table = new TableImpl(Headers, Datas);
+
+        return table;
     }
 
     @Override
     public Table selectColumnsAt(int... indices) {
-        return null;
+        ArrayList<String> Datas = new ArrayList<>();
+        String Headers = isFirstRowHeader ? "" : null;
+
+        if(isFirstRowHeader)
+        {
+            for(int i = 0; i < indices.length; i++)
+            {
+                Headers += ColumnList.get(indices[i]).getHeader();
+                if(i != indices.length - 1)
+                    Headers += ",";
+            }
+        }
+
+        for(int i = isFirstRowHeader ? 1 : 0; i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++)
+        {
+            String temp = "";
+            for(int j = 0; j < indices.length; j++)
+            {
+                temp += ColumnList.get(indices[j]).getValue(i);
+                if(j != indices.length - 1)
+                    temp += ",";
+            }
+            Datas.add(temp);
+        }
+
+        Table table = new TableImpl(Headers, Datas);
+
+        return table;
     }
 
     @Override
@@ -438,7 +535,7 @@ public class TableImpl implements Table {
 
     @Override
     public Column getColumn(int index) {
-        return null;
+        return ColumnList.get(index);
     }
 
     @Override

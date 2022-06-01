@@ -53,7 +53,7 @@ public class Test {
 //        10) 지정한 행 인덱스로만 구성된 서브테이블을 얻는다. (새 테이블)
 //        table.selectRowsAt(654, 829, 10, 99).print();
 //        anotherTable = table.selectRowsAt(654, 829);
-//        System.out.println("identity test for selectRowsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"));
+//        System.out.println("identity test for selectRowsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"))//;
 
 //        11) 지정한 열 인덱스 범위(begin<=, <end)의 서브테이블을 얻는다. (새 테이블)
 //        table.selectColumns(0, 4).print();
@@ -61,9 +61,9 @@ public class Test {
 //        System.out.println("identity test for selectColumns(range): " + (table.equals(anotherTable) ? "Fail" : "Pass"));
 
 //        10) 지정한 열 인덱스로만 구성된 서브테이블을 얻는다. (새 테이블)
-//        table.selectColumnsAt(4, 5, 3).print();
-//        anotherTable = table.selectColumnsAt(4, 5, 3);
-//        System.out.println("identity test for selectColumnsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"));
+        table.selectColumnsAt(4, 5, 3).print();
+        anotherTable = table.selectColumnsAt(4, 5, 3);
+        System.out.println("identity test for selectColumnsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"));
 
 //        11) 테이블을 기준 열인덱스(3)로 정렬한다. 이 때, 오름차순(true), null값은 나중에(false)(원본 테이블 정렬)
 //        table.sort(5, true, false).print();
