@@ -35,13 +35,73 @@ public class CSVs {
      * @return 새로운 Table 객체를 반환한다. 즉, 첫 번째 매개변수 Table은 변경되지 않는다.
      */
     public static Table sort(Table table, int byIndexOfColumn, boolean isAscending, boolean isNullFirst) {
-        return null;
+
+        String Headers = "";
+
+        for(int i = 0; i < table.getColumnCount(); i++)
+        {
+            Headers += table.getColumn(i).getHeader();
+            if(table.getColumn(i).getHeader() != null && i != table.getColumnCount() - 1)
+                Headers += ",";
+        }
+
+        ArrayList<String> Datas = new ArrayList<>();
+
+        for(int i = Headers.equals("") ? 0 : 1; i < (Headers.equals("") ? table.getRowCount() + 1 : table.getRowCount()); i++)
+        {
+            String temp = "";
+
+            for(int j = 0; j < table.getColumnCount(); j++)
+            {
+                temp += table.getColumn(j).getValue(i);
+
+                if(j != table.getColumnCount() - 1)
+                    temp += ",";
+            }
+
+            Datas.add(temp);
+        }
+
+        Table t = new TableImpl(Headers, Datas);
+        t.sort(byIndexOfColumn, isAscending, isNullFirst);
+
+        return t;
     }
 
     /**
      * @return 새로운 Table 객체를 반환한다. 즉, 첫 번째 매개변수 Table은 변경되지 않는다.
      */
     public static Table shuffle(Table table) {
-        return null;
+
+        String Headers = "";
+
+        for(int i = 0; i < table.getColumnCount(); i++)
+        {
+            Headers += table.getColumn(i).getHeader();
+            if(table.getColumn(i).getHeader() != null && i != table.getColumnCount() - 1)
+                Headers += ",";
+        }
+
+        ArrayList<String> Datas = new ArrayList<>();
+
+        for(int i = Headers.equals("") ? 0 : 1; i < (Headers.equals("") ? table.getRowCount() + 1 : table.getRowCount()); i++)
+        {
+            String temp = "";
+
+            for(int j = 0; j < table.getColumnCount(); j++)
+            {
+                temp += table.getColumn(j).getValue(i);
+
+                if(j != table.getColumnCount() - 1)
+                    temp += ",";
+            }
+
+            Datas.add(temp);
+        }
+
+        Table t = new TableImpl(Headers, Datas);
+        t.shuffle();
+
+        return t;
     }
 }

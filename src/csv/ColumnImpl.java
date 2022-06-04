@@ -1,20 +1,13 @@
 package csv;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Vector;
+import javax.xml.crypto.Data;
+import java.util.*;
 
-public class ColumnImpl implements Column{
+public class ColumnImpl implements Column {
 
     private ArrayList<Object> DataList = new ArrayList<Object>();
     private boolean isFirstHeader = false;
     private String header;
-
-    ColumnImpl()
-    {
-
-    }
 
     ColumnImpl(String header, ArrayList<Object> data)
     {
@@ -51,12 +44,27 @@ public class ColumnImpl implements Column{
 
     @Override
     public void setValue(int index, String value) {
+        try
+        {
+            DataList.set(index, value);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            DataList.add(index, value);
+        }
 
     }
 
     @Override
     public <T extends Number> void setValue(int index, T value) {
-
+        try
+        {
+            DataList.set(index, value.toString());
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            DataList.add(index, value.toString());
+        }
     }
 
     @Override
@@ -287,26 +295,113 @@ public class ColumnImpl implements Column{
 
     @Override
     public boolean fillNullWithMean() {
-        return false;
+
+        boolean isNullFilled = false;
+
+        if(isNumericColumn() && getNullCount() > 0)
+        {
+            isNullFilled = true;
+
+            double mean = getMean();
+
+            for (int i = isFirstHeader ? 1 : 0; i < DataList.size(); i++) {
+                if(DataList.get(i).equals("null"))
+                    setValue(i, mean);
+            }
+        }
+
+        return isNullFilled;
     }
 
     @Override
     public boolean fillNullWithZero() {
-        return false;
+
+        boolean isNullFilled = false;
+
+        if(isNumericColumn() && getNullCount() > 0)
+        {
+            isNullFilled = true;
+
+            for (int i = isFirstHeader ? 1 : 0; i < DataList.size(); i++) {
+                if(DataList.get(i).equals("null"))
+                    setValue(i, 0);
+            }
+        }
+
+        return isNullFilled;
     }
 
     @Override
     public boolean standardize() {
-        return false;
+
+        boolean isStandardized = false;
+
+        if(isNumericColumn())
+        {
+            isStandardized = true;
+
+            double mean = getMean();
+            double std = getStd();
+
+            for(int i = isFirstHeader ? 1 : 0; i < DataList.size(); i++)
+            {
+                if(DataList.get(i).equals("null"))
+                    continue;
+
+                double data = Double.parseDouble(DataList.get(i).toString());
+
+                DataList.set(i, Double.toString(Math.round((data - mean) / std * 1000000) / 1000000.0));
+            }
+        }
+
+        return isStandardized;
     }
 
     @Override
     public boolean normalize() {
-        return false;
+
+        boolean isNormalized = false;
+
+        if(isNumericColumn())
+        {
+            isNormalized = true;
+
+            double max = getNumericMax();
+            double min = getNumericMin();
+
+            for(int i = isFirstHeader ? 1 : 0; i < DataList.size(); i++)
+            {
+                if(DataList.get(i).equals("null"))
+                    continue;
+
+                double data = Double.parseDouble(DataList.get(i).toString());
+
+                DataList.set(i, Double.toString(Math.round((data - min) / (max - min) * 1000000) / 1000000.0));
+            }
+        }
+
+        return isNormalized;
     }
 
     @Override
     public boolean factorize() {
+
+        boolean isFactorized = false;
+
+        String tmp1 = getValue(isFirstHeader ? 1 : 0);
+        String tmp2;
+
+        for(int i = isFirstHeader ? 2 : 1; i < DataList.size(); i++)
+        {
+            if(!getValue(i).equals("null") && !tmp1.equals(getValue(i)))
+            {
+                tmp2 = getValue(i); // tmp1과 다른 두번째 값 추출
+                break;
+            }
+        }
+
+
         return false;
     }
+
 }

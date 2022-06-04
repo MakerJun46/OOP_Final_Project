@@ -5,9 +5,7 @@ import org.w3c.dom.ranges.Range;
 import javax.xml.crypto.Data;
 import java.lang.reflect.Type;
 import java.sql.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class TableImpl implements Table {
@@ -21,7 +19,7 @@ public class TableImpl implements Table {
     {
         ArrayList<ArrayList<String>> s_tmp = new ArrayList<>();
 
-        if(header != null)
+        if(header != null && !header.equals(""))
         {
             AllHeaders = header;
             String[] temp = header.split(",");
@@ -515,56 +513,212 @@ public class TableImpl implements Table {
         return null;
     }
 
+    void swapRowData(ArrayList<Column> List, int moveIndex, int targetIndex)
+    {
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            String moveData = List.get(i).getValue(moveIndex);
+            String targetData = List.get(i).getValue(targetIndex);
+
+            List.get(i).setValue(targetIndex, moveData);
+            List.get(i).setValue(moveIndex, targetData);
+        }
+    }
+
+    void insertRowData(ArrayList<Column> List, int moveIndex, int targetIndex) // 헤더가 있는 경우 인덱스 0은 입력값으로 주면 안됨
+    {
+        if(moveIndex == targetIndex)
+            return;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            String moveData = List.get(i).getValue(moveIndex);
+
+            if(targetIndex < moveIndex) // 뒤에 있는 자료를 앞으로 삽입하는 경우 (isNullFirst인 경우)
+            {
+                for (int j = moveIndex; j > targetIndex; j--)
+                {
+                    List.get(i).setValue(j, List.get(i).getValue(j - 1));
+                }
+            }
+            else // 앞에 있는 자료를 뒤로 삽입하는 경우 (!isNullFirst인 경우)
+            {
+                for(int j = moveIndex; j < targetIndex; j++)
+                {
+                    List.get(i).setValue(j, List.get(i).getValue(j + 1));
+                }
+            }
+
+            List.get(i).setValue(targetIndex, moveData); // movedata taretIndex 자리로 삽입 (targetData 삭제)
+        }
+    }
+
     @Override
     public Table sort(int byIndexOfColumn, boolean isAscending, boolean isNullFirst) {
-        return null;
+
+        ArrayList<Column> Datas = ColumnList;
+        int nullTmpIndex = isFirstRowHeader ? 1 : 0;
+        nullTmpIndex = isNullFirst ? nullTmpIndex : (isFirstRowHeader ? getRowCount() : getRowCount() - 1);
+
+        if(isNullFirst) {
+            for (int i = isFirstRowHeader ? 1 : 0; i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++) {
+                if (Datas.get(byIndexOfColumn).getValue(i).equals("null")) // null data
+                {
+                    insertRowData(Datas, i, nullTmpIndex);
+                    nullTmpIndex++;
+                }
+            }
+        }
+        else
+        {
+            for(int i = isFirstRowHeader ? getRowCount() : getRowCount() - 1; i > 0; i--)
+            {
+                if(Datas.get(byIndexOfColumn).getValue(i).equals("null"))
+                {
+                    insertRowData(Datas, i, nullTmpIndex);
+                }
+            }
+        }
+
+        // select sort (O(n^2))
+        for(int i = isNullFirst ? nullTmpIndex : (isFirstRowHeader ? 1 : 0); i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++)
+        {
+            int sortIndex = i;
+
+            for (int j = i + 1; j < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); j++)
+            {
+                try // data가 int 또는 double인 경우
+                {
+                    if (isAscending && Double.parseDouble(Datas.get(byIndexOfColumn).getValue(j)) <
+                            Double.parseDouble(Datas.get(byIndexOfColumn).getValue(sortIndex)))
+                    {
+                        sortIndex = j;
+                    }
+                    else if(!isAscending && Double.parseDouble(Datas.get(byIndexOfColumn).getValue(j)) >
+                            Double.parseDouble(Datas.get(byIndexOfColumn).getValue(sortIndex)))
+                    {
+                        sortIndex = j;
+                    }
+                }
+                catch (NumberFormatException e) // data가 string 타입인 경우
+                {
+                    if (Datas.get(byIndexOfColumn).getValue(j).equals("null"))
+                        continue;
+
+                    if(isAscending && Datas.get(byIndexOfColumn).getValue(j).compareTo(
+                            Datas.get(byIndexOfColumn).getValue(sortIndex)) < 0)
+                    {
+                        sortIndex = j;
+                    }
+                    else if(!isAscending && Datas.get(byIndexOfColumn).getValue(j).compareTo(
+                            Datas.get(byIndexOfColumn).getValue(sortIndex)) > 0)
+                    {
+                        sortIndex = j;
+                    }
+                }
+            }
+
+            swapRowData(Datas, sortIndex, i);
+        }
+
+        return this;
     }
 
     @Override
     public Table shuffle() {
-        return null;
+
+        Random rand = new Random();
+
+        for(int i = getRowCount(); i > (isFirstRowHeader ? 1 : 0); i--)
+        {
+            int randIndex = rand.nextInt((isFirstRowHeader ? i - 1 : i)); // 헤더가 있는 경우 0 ~ 891로 뽑는다.
+
+            swapRowData(ColumnList, i, (isFirstRowHeader ? randIndex + 1 : randIndex)); // 헤더가 있는 경우 0번째 라인은 바꾸면 안되니까
+        }
+
+        return this;
     }
 
     @Override
     public int getRowCount() { return ColumnList.get(0).count(); }
 
     @Override
-    public int getColumnCount() {
-        return ColumnList.size();
-    }
+    public int getColumnCount() { return ColumnList.size(); }
 
     @Override
-    public Column getColumn(int index) {
-        return ColumnList.get(index);
-    }
+    public Column getColumn(int index) { return ColumnList.get(index); }
 
     @Override
     public Column getColumn(String name) {
+
+        for(Column c : ColumnList)
+        {
+            if(c.getHeader().equals(name))
+                return c;
+        }
+
         return null;
     }
 
     @Override
     public boolean fillNullWithMean() {
-        return false;
+
+        boolean isNullFilled = false;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            if(ColumnList.get(i).fillNullWithMean())
+                isNullFilled = true;
+        }
+
+        return isNullFilled;
     }
 
     @Override
     public boolean fillNullWithZero() {
-        return false;
+
+        boolean isNullFilled = false;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            if(ColumnList.get(i).fillNullWithZero())
+                isNullFilled = true;
+        }
+
+        return isNullFilled;
     }
 
     @Override
     public boolean standardize() {
-        return false;
+
+        boolean isStandardized = false;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            if(ColumnList.get(i).standardize())
+                isStandardized = true;
+        }
+
+        return isStandardized;
     }
 
     @Override
     public boolean normalize() {
-        return false;
+
+        boolean isNormalized = false;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            if(ColumnList.get(i).normalize())
+                isNormalized = true;
+        }
+
+        return isNormalized;
     }
 
     @Override
     public boolean factorize() {
         return false;
     }
+
 }
