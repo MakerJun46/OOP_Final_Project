@@ -508,13 +508,90 @@ public class TableImpl implements Table {
         return table;
     }
 
+
+    /**
+     * @param
+     * @return 검색 조건에 해당하는 행으로 구성된 새로운 Table 생성 후 반환, 제일 나중에 구현 시도하세요.
+     */
     @Override
     public <T> Table selectRowsBy(String columnName, Predicate<T> predicate) {
-        return null;
+
+        ArrayList<String> Datas = new ArrayList<>();
+        ArrayList<Integer> selectRowsIndex = new ArrayList<>();
+
+        Column c = getColumn(columnName);
+
+        for(int i = isFirstRowHeader ? 1 : 0; i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++)
+        {
+            try // String type lambda
+            {
+                if(predicate.test((T) c.getValue(i)))
+                    selectRowsIndex.add(i);
+            }
+            catch (ClassCastException e_null)
+            {
+                try // Integer type lambda
+                {
+                    if(c.getValue(i, Integer.class) == null)
+                        continue;
+
+                    if(predicate.test((T) c.getValue(i, Integer.class)))
+                        selectRowsIndex.add(i);
+                }
+                catch(ClassCastException e_integer) // Double type lambda
+                {
+                    if(c.getValue(i, Double.class) == null)
+                        continue;
+
+                    if(predicate.test((T) c.getValue(i, Double.class)))
+                        selectRowsIndex.add(i);
+                }
+            }
+        }
+
+        // String, Integer, Double 타입 검사에서 한 케이스도 발견되지 않은 경우 Object로 간주
+        // getValue에서 얻을 수 있는 type은 Stirng, Integer, Double, Object 4가지이므로 위에서 검사 후 해당 케이스가 없으면 Object 검사 진행
+        // 상단 반복문에서 검사하지 못한 이유는 Object(null)로 return 받을 시 NullPointerException과 ClassCastException이 동시 발생하여 분리
+        // 상단에서 한 케이스라도 발견한 경우 Object 타입이 아니므로 검사 패스
+        if(selectRowsIndex.size() == 0)
+        {
+            for(int i = isFirstRowHeader ? 1 : 0; i < (isFirstRowHeader ? getRowCount() + 1 : getRowCount()); i++)
+            {
+                try
+                {
+                    if(predicate.test((T) c.getValue(i, Double.class)))
+                        selectRowsIndex.add(i);
+                }
+                catch (NullPointerException e) // 이 경우 Object 타입 lambda 식이 아니므로 상단에서 검사된 케이스가 아예 없는 경우, 바로 break
+                {
+                    selectRowsIndex.clear();
+                    break;
+                }
+            }
+        }
+
+        // 선별된 행(selectRowsIndex)으로만 구성된 새로운 Table 객체 생성 및 반환
+        for(int i = 0; i < selectRowsIndex.size(); i++)
+        {
+            String temp = "";
+            for(int j = 0; j < getColumnCount(); j++)
+            {
+                temp += ColumnList.get(j).getValue(selectRowsIndex.get(i));
+                if(j != getColumnCount() - 1)
+                    temp += ",";
+            }
+
+            Datas.add(temp);
+        }
+
+        Table table = new TableImpl(AllHeaders, Datas);
+
+        return table;
     }
 
     void swapRowData(ArrayList<Column> List, int moveIndex, int targetIndex)
     {
+
         for(int i = 0; i < getColumnCount(); i++)
         {
             String moveData = List.get(i).getValue(moveIndex);
@@ -525,7 +602,7 @@ public class TableImpl implements Table {
         }
     }
 
-    void insertRowData(ArrayList<Column> List, int moveIndex, int targetIndex) // 헤더가 있는 경우 인덱스 0은 입력값으로 주면 안됨
+    void insertRowData(ArrayList<Column> List, int moveIndex, int targetIndex)
     {
         if(moveIndex == targetIndex)
             return;
@@ -651,10 +728,10 @@ public class TableImpl implements Table {
     @Override
     public Column getColumn(String name) {
 
-        for(Column c : ColumnList)
+        for(int i = 0; i < getColumnCount(); i++)
         {
-            if(c.getHeader().equals(name))
-                return c;
+            if(ColumnList.get(i).getHeader().equals(name))
+                return ColumnList.get(i);
         }
 
         return null;
@@ -718,7 +795,16 @@ public class TableImpl implements Table {
 
     @Override
     public boolean factorize() {
-        return false;
+
+        boolean isFactorized = false;
+
+        for(int i = 0; i < getColumnCount(); i++)
+        {
+            if(ColumnList.get(i).factorize())
+                isFactorized = true;
+        }
+
+        return isFactorized;
     }
 
 }

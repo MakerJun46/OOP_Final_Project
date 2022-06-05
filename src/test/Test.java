@@ -53,7 +53,8 @@ public class Test {
 //        10) 지정한 행 인덱스로만 구성된 서브테이블을 얻는다. (새 테이블)
 //        table.selectRowsAt(654, 829, 10, 99).print();
 //        anotherTable = table.selectRowsAt(654, 829);
-//        System.out.println("identity test for selectRowsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"))//;
+//        System.out.println("identity test for selectRowsAt(indices): " + (table.equals(anotherTable) ? "Fail" : "Pass"));
+
 
 //        11) 지정한 열 인덱스 범위(begin<=, <end)의 서브테이블을 얻는다. (새 테이블)
 //        table.selectColumns(0, 4).print();
@@ -134,11 +135,11 @@ public class Test {
 //        table.getStats().print();
 
 //        19) (가능한 컬럼에 대하여) table 컬럼마다 값이 {0, 1}로 구성되게 한다. (원본 테이블 값 변경)
-        System.out.println("****************************** before factorizing ******************************");
-        table.print();
-        System.out.println("table.factorize() = " + table.factorize());
-        System.out.println("****************************** after factorizing ******************************");
-        table.print();
+//        System.out.println("****************************** before factorizing ******************************");
+//        table.print();
+//        System.out.println("table.factorize() = " + table.factorize());
+//        System.out.println("****************************** after factorizing ******************************");
+//        table.print();
 
 //        20) 조건식을 만족하는 행을 얻는다.
 //        table.selectRowsBy("Name", (String x) -> x.contains("Lee")).print();

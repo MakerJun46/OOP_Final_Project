@@ -18,9 +18,11 @@ public class ColumnImpl implements Column {
             isFirstHeader = true;
         }
 
-        for(int i = 0; i < data.size(); i++)
+        if(!data.isEmpty())
         {
-            DataList.add(data.get(i));
+            for (int i = 0; i < data.size(); i++) {
+                DataList.add(data.get(i));
+            }
         }
     }
 
@@ -39,11 +41,26 @@ public class ColumnImpl implements Column {
 
     @Override
     public <T extends Number> T getValue(int index, Class<T> t) {
-        return null;
+        try
+        {
+            if(t.getTypeName().equals("java.lang.Integer"))
+            {
+                return t.cast(Integer.parseInt(getValue(index)));
+            }
+            else
+            {
+                return t.cast(Double.parseDouble(getValue(index)));
+            }
+        }
+        catch (NumberFormatException e)
+        {
+            return t.cast(null);
+        }
     }
 
     @Override
     public void setValue(int index, String value) {
+
         try
         {
             DataList.set(index, value);
@@ -52,7 +69,6 @@ public class ColumnImpl implements Column {
         {
             DataList.add(index, value);
         }
-
     }
 
     @Override
@@ -389,19 +405,51 @@ public class ColumnImpl implements Column {
         boolean isFactorized = false;
 
         String tmp1 = getValue(isFirstHeader ? 1 : 0);
-        String tmp2;
+        String tmp2 = "";
+
+        int searchIndex = isFirstHeader ? 2 : 1;
 
         for(int i = isFirstHeader ? 2 : 1; i < DataList.size(); i++)
         {
             if(!getValue(i).equals("null") && !tmp1.equals(getValue(i)))
             {
                 tmp2 = getValue(i); // tmp1과 다른 두번째 값 추출
+                searchIndex = i;
                 break;
             }
         }
 
+        if(tmp2.equals(""))
+            return isFactorized; // 모든 데이터가 null 과 하나의 값만 존재한다면 false
 
-        return false;
+        for(int i = searchIndex; i < DataList.size(); i++)
+        {
+            if(!getValue(i).equals("null")) // null 인경우는 패스
+            {
+                if(getValue(i).equals(tmp1) || getValue(i).equals(tmp2)) // tmp1 또는 tmp2 인 경우 continue;
+                    continue;
+                else // tmp1 또는 tmp2 가 아닌 제3의 데이터가 포함된 경우
+                {
+                    return isFactorized; // false 리턴
+                }
+            }
+        }
+
+        isFactorized = true; // 열의 data가 tmp1, tmp2와 null밖에 없는 경우 factorize 실행
+
+        for(int i = isFirstHeader ? 1 : 0; i < DataList.size(); i++)
+        {
+            if(getValue(i).equals(tmp1))
+            {
+                setValue(i, 1);
+            }
+            else if(getValue(i).equals(tmp2))
+            {
+                setValue(i, 0);
+            }
+        }
+
+        return isFactorized;
     }
 
 }

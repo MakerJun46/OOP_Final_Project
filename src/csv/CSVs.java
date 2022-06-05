@@ -15,7 +15,6 @@ public class CSVs {
         String header = null;
         Scanner scanner = new Scanner(csv);
 
-
         if(isFirstLineHeader)
         {
             header = scanner.nextLine();
